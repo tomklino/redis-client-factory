@@ -1,6 +1,6 @@
 {
   "name": "redis-client-factory",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A wrapper for the redis client ioredis",
   "main": "app.js",
   "scripts": {
