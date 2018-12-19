@@ -33,7 +33,20 @@ module.exports = function redisClientFactoryInit(conf) {
       }
     }
 
-    return { subscribeTo }
+    async function unsubscribeFrom(channel) {
+      if(!subscriptions[channel]) {
+        debug(5, `unsubscribing: no such channel: ${channel}`)
+        return;
+      }
+
+      await client.unsubscribe(channel)
+      delete subscriptions[channel]
+    }
+
+    return {
+      subscribeTo,
+      unsubscribeFrom
+    }
   }
 
   async function createClient(opts) {

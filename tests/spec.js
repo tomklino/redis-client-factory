@@ -10,7 +10,7 @@ const redisClientFactoryInit = require('../app')
 
 describe('redisClientFactoryInit tests', function() {
   this.timeout('5s')
-  this.slow('2s')
+  this.slow('1s')
 
   it('connects to redis single instance mode', async () => {
     let redisClientFactory = redisClientFactoryInit({ host: 'localhost' })
@@ -61,6 +61,11 @@ describe('redisClientFactoryInit tests', function() {
     }))
     redis.disconnect()
   })
+})
+
+describe('subscriber object tests', function() {
+  this.timeout('5s')
+  this.slow('2s')
 
   it('gets a subscriber object', async() => {
     let redisClientFactory = redisClientFactoryInit({ host: 'localhost' });
@@ -101,5 +106,50 @@ describe('redisClientFactoryInit tests', function() {
     await sleep(250);
 
     expect(callback).to.have.been.calledWith(test_message)
+  })
+
+  it('subscribes and unsubscirbes', async() => {
+    let redisClientFactory = redisClientFactoryInit({ host: 'localhost' });
+    let subscriber = await redisClientFactory.createSubscriber();
+    let redisClient = await redisClientFactory.createClient();
+    let callback = sinon.spy()
+
+    let test_channel = 'test-channel', test_message = 'test-message';
+
+    await subscriber.subscribeTo(test_channel, callback)
+
+    await subscriber.unsubscribeFrom(test_channel)
+
+    redisClient.publish(test_channel, test_message)
+
+    //publish is async and redis gives no indication for when a subscriber
+    //got the message in clusuter mode
+    await sleep(250);
+
+    expect(callback).to.not.have.been.called
+  })
+
+  it('subscribes and unsubscirbes in cluster mode', async() => {
+    let redisClientFactory = redisClientFactoryInit({
+      host: 'localhost',
+      port: 7000
+    })
+    let subscriber = await redisClientFactory.createSubscriber();
+    let redisClient = await redisClientFactory.createClient();
+    let callback = sinon.spy()
+
+    let test_channel = 'test-channel', test_message = 'test-message';
+
+    await subscriber.subscribeTo(test_channel, callback)
+
+    await subscriber.unsubscribeFrom(test_channel)
+
+    redisClient.publish(test_channel, test_message)
+
+    //publish is async and redis gives no indication for when a subscriber
+    //got the message in clusuter mode
+    await sleep(250);
+
+    expect(callback).to.not.have.been.called
   })
 })
