@@ -1,6 +1,6 @@
 {
   "name": "redis-client-factory",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A wrapper for the redis client ioredis",
   "main": "app.js",
   "scripts": {
@@ -13,10 +13,14 @@
   "author": "Tom Klinovsky",
   "license": "MIT",
   "dependencies": {
-    "ioredis": "^4.3.0"
+    "ioredis": "^4.3.0",
+    "nice_debug": "^0.1.1"
   },
   "devDependencies": {
+    "await-sleep": "0.0.1",
     "chai": "^4.2.0",
-    "mocha": "^5.2.0"
+    "mocha": "^5.2.0",
+    "sinon": "^7.2.2",
+    "sinon-chai": "^3.3.0"
   }
 }

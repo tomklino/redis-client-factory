@@ -1,10 +1,17 @@
 const chai = require('chai');
+const sinon = require('sinon');
+const sinonChai = require("sinon-chai");
+const sleep = require('await-sleep');
+
+chai.use(sinonChai)
 const expect = chai.expect;
 
 const redisClientFactoryInit = require('../app')
 
 describe('redisClientFactoryInit tests', function() {
   this.timeout('5s')
+  this.slow('2s')
+
   it('connects to redis single instance mode', async () => {
     let redisClientFactory = redisClientFactoryInit({ host: 'localhost' })
     let redis = await redisClientFactory.createClient()
@@ -53,5 +60,46 @@ describe('redisClientFactoryInit tests', function() {
       node.disconnect()
     }))
     redis.disconnect()
+  })
+
+  it('gets a subscriber object', async() => {
+    let redisClientFactory = redisClientFactoryInit({ host: 'localhost' });
+    let subscriber = await redisClientFactory.createSubscriber();
+    let redisClient = await redisClientFactory.createClient();
+    let callback = sinon.spy()
+
+    let test_channel = 'test-channel', test_message = 'test-message';
+
+    await subscriber.subscribeTo(test_channel, callback)
+
+    redisClient.publish(test_channel, test_message)
+
+    //publish is async and redis gives no indication for when a subscriber
+    //got the message in clusuter mode
+    await sleep(250);
+
+    expect(callback).to.have.been.calledWith(test_message)
+  })
+
+  it('gets a subscriber object in cluster mode', async() => {
+    let redisClientFactory = redisClientFactoryInit({
+      host: 'localhost',
+      port: 7000
+    })
+    let subscriber = await redisClientFactory.createSubscriber();
+    let redisClient = await redisClientFactory.createClient();
+    let callback = sinon.spy()
+
+    let test_channel = 'test-channel', test_message = 'test-message';
+
+    await subscriber.subscribeTo(test_channel, callback)
+
+    redisClient.publish(test_channel, test_message)
+
+    //publish is async and redis gives no indication for when a subscriber
+    //got the message in clusuter mode
+    await sleep(250);
+
+    expect(callback).to.have.been.calledWith(test_message)
   })
 })
